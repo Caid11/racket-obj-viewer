@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require ffi/unsafe
+(require data/gvector
+         ffi/unsafe
          ffi/vector
          opengl
          racket/class
@@ -9,7 +10,7 @@
          racket/list
          racket/match
          racket/string
-         racket/vector
+         ;racket/vector
 
          "types.rkt"
          "obj.rkt")
@@ -231,19 +232,19 @@ GLSL
               (define (float3->list x)
                 (list (float3-x x) (float3-y x) (float3-z x)))
 
-              (for ([f (group-faces g)])
+              (for/gvector ([f (group-faces g)])
                 (let* ([v (face-vertices f)]
                        [t (face-tex-coords f)])
                   (match (face-vertices f)
                     [(vector v0 v1 v2)
-                     (set! positions (append positions (float3->list (vector-ref (obj-model-positions obj-to-upload) (- v0 1)))))
-                     (set! positions (append positions (float3->list (vector-ref (obj-model-positions obj-to-upload) (- v1 1)))))
-                     (set! positions (append positions (float3->list (vector-ref (obj-model-positions obj-to-upload) (- v2 1)))))])
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v0 1)))))
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v1 1)))))
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v2 1)))))])
                   (match (face-tex-coords f)
                     [(vector t0 t1 t2)
-                     (set! tex-coords (append tex-coords (float3->list (vector-ref (obj-model-tex-coords obj-to-upload) (- t0 1)))))
-                     (set! tex-coords (append tex-coords (float3->list (vector-ref (obj-model-tex-coords obj-to-upload) (- t1 1)))))
-                     (set! tex-coords (append tex-coords (float3->list (vector-ref (obj-model-tex-coords obj-to-upload) (- t2 1)))))]
+                     (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t0 1)))))
+                     (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t1 1)))))
+                     (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t2 1)))))]
                     [else #f])))
 
               (define pos-buffer (list->f32vector positions))
@@ -278,7 +279,7 @@ GLSL
 
               (define (get-mtl m-name)
                 (define mtl #f)
-                (for ([m (obj-model-mtls obj-to-upload)])
+                (for/gvector ([m (obj-model-mtls obj-to-upload)])
                   (if (string=? (mtl-name m) m-name)
                       (set! mtl m) #f))
                 mtl)
