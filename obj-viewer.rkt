@@ -13,7 +13,7 @@
          ;racket/vector
 
          "types.rkt"
-         "obj.rkt")
+         "obj-parsac.rkt")
 
 ; Linear math
 ; Use right-handed, y-up conventions
@@ -221,6 +221,8 @@ GLSL
             (set! meshes-to-render '())
 
             (define obj-to-upload (load-obj obj-path))
+            (cond
+              [(not obj-to-upload) (raise 'unable-to-load-obj)])
 
             (for ([g (obj-model-groups obj-to-upload)])
               (define vao (u32vector-ref (glGenVertexArrays 1) 0))

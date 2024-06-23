@@ -4,10 +4,7 @@
          racket/list
          racket/match
          racket/string
-         racket/vector
-         "types.rkt")
-
-(provide load-obj)
+         racket/vector)
 
 (define (load-obj obj-path)
   (define mtls (make-gvector))
