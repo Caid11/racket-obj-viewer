@@ -32,8 +32,8 @@
         [m-1-1 (f32vector-ref mat 3)]
         [v-0 (f32vector-ref v 0)]
         [v-1 (f32vector-ref v 1)])
-  (f32vector (+ (* v-0 m-0-0) (* v-1 m-1-0))
-             (+ (* v-0 m-0-1) (* v-1 m-1-1)))))
+    (f32vector (+ (* v-0 m-0-0) (* v-1 m-1-0))
+               (+ (* v-0 m-0-1) (* v-1 m-1-1)))))
 
 (define (mat4f-mat4f-* b a)
   (define result (make-f32vector 16))
@@ -79,10 +79,10 @@
   (letrec ([y-scale (/ 1.0 (tan (* fov 0.5)))]
            [x-scale (/ y-scale aspect-ratio)]
            [z-diff (- z-near z-far)])
-  (f32vector x-scale 0.0     0.0                         0.0
-             0.0     y-scale 0.0                         0.0
-             0.0     0.0     (/ (+ z-far z-near) z-diff) (/ (* (* z-far z-near) 2.0) z-diff)
-             0.0     0.0     -1.0                        1.0)))
+    (f32vector x-scale 0.0     0.0                         0.0
+               0.0     y-scale 0.0                         0.0
+               0.0     0.0     (/ (+ z-far z-near) z-diff) (/ (* (* z-far z-near) 2.0) z-diff)
+               0.0     0.0     -1.0                        1.0)))
 
 (define (normalize x y z)
   (define length (sqrt (+ (* x x) (* y y) (* z z))))
@@ -139,7 +139,7 @@ void main() {
     vTexCoord = texCoord.xy;
 }
 GLSL
-)
+  )
 
 (define fragment-shader-source #<<GLSL
 #version 330 core
@@ -158,7 +158,7 @@ void main() {
         color = vec4(1.0, 0.0f, 0.0f, 1.0f);
 }
 GLSL
-)
+  )
 
 (define (compile-shader source shader-type)
   (define shader (glCreateShader shader-type))
@@ -231,19 +231,22 @@ GLSL
               (define positions '())
               (define tex-coords '())
 
+              ;(define (float3->list x)
+              ;  (list (float3-x x) (float3-y x) (float3-z x)))
+
               (define (float3->list x)
-                (list (float3-x x) (float3-y x) (float3-z x)))
+                (list (vec3-x x) (vec3-y x) (vec3-z x)))
 
               (for/gvector ([f (group-faces g)])
                 (let* ([v (face-vertices f)]
                        [t (face-tex-coords f)])
                   (match (face-vertices f)
-                    [(vector v0 v1 v2)
-                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v0 1)))))
-                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v1 1)))))
-                     (set! positions (append positions (float3->list (gvector-ref (obj-model-positions obj-to-upload) (- v2 1)))))])
+                    [(vec3 v0 v1 v2)
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-vertices obj-to-upload) (- v0 1)))))
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-vertices obj-to-upload) (- v1 1)))))
+                     (set! positions (append positions (float3->list (gvector-ref (obj-model-vertices obj-to-upload) (- v2 1)))))])
                   (match (face-tex-coords f)
-                    [(vector t0 t1 t2)
+                    [(vec3 t0 t1 t2)
                      (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t0 1)))))
                      (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t1 1)))))
                      (set! tex-coords (append tex-coords (float3->list (gvector-ref (obj-model-tex-coords obj-to-upload) (- t2 1)))))]
@@ -280,11 +283,12 @@ GLSL
                 new-pixels)
 
               (define (get-mtl m-name)
-                (define mtl #f)
-                (for/gvector ([m (obj-model-mtls obj-to-upload)])
-                  (if (string=? (mtl-name m) m-name)
-                      (set! mtl m) #f))
-                mtl)
+                #f)
+              ;  (define mtl #f)
+              ;  (for/gvector ([m (obj-model-mtls obj-to-upload)])
+              ;    (if (string=? (mtl-name m) m-name)
+              ;        (set! mtl m) #f))
+              ;  mtl)
 
               (define-values (obj-dir obj-filename -obj-is-dir) (split-path obj-path))
               
@@ -293,8 +297,8 @@ GLSL
                     (let* ([m (get-mtl (group-mtl g))]
                            [tex-filename (mtl-kd m)]
                            [tex-path (build-path obj-dir tex-filename)]
-                          [diffuse-bitmap (read-bitmap tex-path)]
-                          [texture (u32vector-ref (glGenTextures 1) 0)])
+                           [diffuse-bitmap (read-bitmap tex-path)]
+                           [texture (u32vector-ref (glGenTextures 1) 0)])
                       (glBindTexture GL_TEXTURE_2D texture)
                       
                       (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MIN_FILTER GL_LINEAR)
@@ -355,7 +359,7 @@ GLSL
                                   (set! camera-phi (- camera-phi (* delta-y camera-rotate-sensitivity delta-t)))
                                   (cond [(> camera-phi (/ 3.14 2)) (set! camera-phi (/ 3.14 2))]
                                         [(< camera-phi (/ -3.14 2)) (set! camera-phi (/ -3.14 2))]))
-                                  #f)
+                                #f)
                             (if is-right-mouse-down
                                 (set! camera-distance (+ camera-distance (* delta-y camera-zoom-sensitivity delta-t))) #f))])
                        

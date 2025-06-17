@@ -2,6 +2,7 @@
 
 (require
   data/applicative
+  data/gvector
   data/either
   data/monad
   megaparsack
@@ -28,6 +29,16 @@
 (struct obj-model (vertices normals tex-coords groups) #:transparent)
 
 (struct comment (msg))
+
+; Parser parameters
+
+(define curr-group (make-parser-parameter #f))
+
+(define vertices (make-parser-parameter (list)))
+(define normals (make-parser-parameter (list)))
+(define tex-coords (make-parser-parameter (list)))
+(define faces (make-parser-parameter (list)))
+(define groups (make-parser-parameter (list)))
 
 (define comment/p
   (do (char-ci/p #\#)
@@ -72,6 +83,8 @@
     (string/p "v ")
     [v <- float3/p]
     (char-ci/p #\newline)
+    [vs <- (vertices)]
+    (vertices (append vs (list v)))
     (pure (vertex v))))
 
 (define normal/p
@@ -93,14 +106,6 @@
     (faces (append fs (list f)))
     (pure f)))
 
-(define curr-group (make-parser-parameter #f))
-
-(define vertices (make-parser-parameter (list)))
-(define normals (make-parser-parameter (list)))
-(define tex-coords (make-parser-parameter (list)))
-(define faces (make-parser-parameter (list)))
-(define groups (make-parser-parameter (list)))
-
 (define group/p
   (do
     (string/p "g ")
@@ -114,7 +119,7 @@
        (do
          [gs <- (groups)]
          [fs <- (faces)]
-         (groups (append gs (list (group fs #f))))
+         (groups (append gs (list (group (list->gvector fs) #f))))
          (faces (list))
          (curr-group name))]
       [else (curr-group name)])))
@@ -139,8 +144,8 @@
         (do
           [fs <- (faces)]
           [gn <- (pure (group fs #f))]
-          (pure (obj-model v n t (append g gn))))]
-      [else (pure (obj-model v n t g))])))
+          (pure (obj-model (list->gvector v) (list->gvector n) (list->gvector t) (list->gvector (append g (list gn))))))]
+      [else (pure (obj-model (list->gvector v) (list->gvector n) (list->gvector t) (list->gvector g)))])))
 
 (define (load-obj obj-path)
   (define obj-str (port->string (open-input-file obj-path) #:close? #t))
@@ -149,3 +154,5 @@
     [(failure msg)
      (printf "~a\n" (parse-error->string msg))
      #f]))
+
+;(load-obj "C:\\src\\racket-obj-viewer\\racket-obj-viewer\\teapot.obj")
